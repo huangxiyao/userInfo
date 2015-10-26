@@ -1,0 +1,21 @@
+---
+- hosts: cloudserver
+  su: no
+  gather_facts: no
+  tasks:
+  - name: backup the localhost private id_rsa
+    shell: if [ -e ~/.ssh/id_rsa -a -e ~/userInfo/roles/sshkey/files/id_rsa_backup ];
+                         then cat ~/.ssh/id_rsa > ~/userInfo/roles/sshkey/files/id_rsa_backup;
+           fi;
+  - name: copy generateAuthorizedFile.sh to remote dest
+    copy: src=./roles/sshkey/files/generateAuthorizedFile.sh dest=/tmp mode=0755 force
+  - name: copy ssh public key from localhost to remote dest
+    copy: src=~/.ssh/id_rsa.pub dest=/tmp mode=0755 force
+  - name: genrate .ssh directory and authorized_keys file
+    shell: bash /tmp/generateAuthorizedFile.sh 
+  - name: copy the content of ssh public key in the directory /tmp to the file authorized_keys
+    shell: cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys
+  - name: remove the file from /tmp/
+    shell: cd /tmp; rm -rf generateAuthorizedFile.sh; rm -rf id_rsa.pub
+
+

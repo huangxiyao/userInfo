@@ -1,0 +1,49 @@
+###------------------------------set the private key and public key and use it login the remote server without passwd---------------------------------------------------
+1.generate the private key and public key
+	run the command   "ssh-keygen"  and you will find it ask you to fill the "location" saving new key and "passphrase". But you won't do anything and click the "key" three times according to its tips
+	the private key(id_rsa) and public key (id_rsa.pub) locate the path "~/.ssh"
+	
+2.copy the public key to the remote key and backup the private key(id_rsa) to local position(~/userInfo/roles/sshkey/files/id_rsa_backup)
+   2.1 copy the directory userInfo to current home directory
+   2.2 go into the directory ~/userInfo/
+   2.3 run the command "ansible-playbook sshKey.yml -i inventory/sshkey -k"
+   
+3. use my account login the remote server
+
+Now you can login any server using the username which generated the private key at this server including the private key(id_rsa)
+
+
+Note   If the remote server which have the private key in the direcory ~/.ssh/,we can copy the content of  id_rsa_backup(Our previous backup) to the server which will be main host.
+       and if the main host have no the id_rsa,we should new this file and gave this file write and read permission only for it's owner(chmod 600 id_rsa)
+	   
+PS : Below is another method to login the remote server 
+	 we can use the private key  to login any server including a public key matched the private key on windows and linux systems
+     command:   ssh -i {path}/{private_key} username@servername  
+	 but the remote server must have the content of public key and write the content to the file "authorized_keys" locating the path "~/.ssh"
+
+
+###------------------------------check user passwd expireddays----------------------------------------------------------------------------------------------------------
+1. we can access the directory "inventory" and edit the hosts1's content and we can also change the username which we will test
+	进入inventory目录 可以修改host1 文件用来改变服务器，也可以继续进入group_vars目录，修改名称为all的文件中的内容，其中username是我们要检测的密码是否过期的用户
+
+2.  this command is ping all servers and see whether this username could login the server
+	ansible all -m ping  -i inventory/hosts1 -k  -u username | grep FAILED
+
+3.  this command is test that the password expiration of the remaining days
+	ansible-playbook checkPwd.yml -i inventory/hosts1 -u username -k -vvvv | grep stdout | awk 'BEGIN{FS="\"stdout\":"}{print $2}' | awk 'BEGIN{FS=","}{print $1}'
+
+   #output format
+
+   服务器名称：用户名：距离现在用户名的密码过期剩余时间
+   servername:username:expiredays
+   c0004650.itcs.hp.com:casfw:177
+
+
+###--------------------------------update user passwd expireddays-----------------------------------------------------------------------------------------------------
+
+	run the command
+	1. go into the directory userInfo/inventory/group_vars and view the file "all"
+	"up_user":we will update for this user
+	"up_expireDay":we will update the time for this user
+
+	2. go into the directory "userInfo" and run the command "ansible-playbook updateUser.sh -i inventory/hosts1 -k"

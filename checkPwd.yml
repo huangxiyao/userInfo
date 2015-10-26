@@ -1,0 +1,24 @@
+---
+- hosts: cloudserver
+  su: no
+  su_user: root
+  gather_facts: no
+  tasks:
+  - name: check user password
+    shell: dateTmp=$(chage -l {{ user }} | grep "Password expires" | awk 'BEGIN{FS=":"}{print $2}');
+               hostname=$(hostname);
+                 if [ ! -n "$dateTmp" ];
+                      then  echo "this user is not existed";
+                else
+                        date1=$(date -d "$dateTmp" +%s);
+                        if [ $? -eq 0 ];
+                                then  date2=$(date -d "$currentTime" +%s);
+                                      tmp=$(($date1 - $date2));
+                                      dayTmp=$(($tmp/86400));
+                                      if [ {{ expireDay }} -gt $dayTmp ];
+                                                then echo $hostname":"{{ user }}":"$dayTmp;
+                                      fi;
+                        fi;
+                fi;
+  roles:
+  - common

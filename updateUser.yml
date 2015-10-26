@@ -1,0 +1,13 @@
+---
+- hosts: cloudserver
+  su: yes
+  su_user: root
+  gather_facts: no
+  tasks:
+  - name: copy updateUser.sh to destation
+    copy: src=~/userOpt/userInfo/roles/updateUser/files/updateUser.sh dest=/tmp mode=0755 force
+    su: no
+  - name: update the expireDay for user
+    shell: bash /tmp/updateUser.sh {{ up_user}} {{ up_expireDay }}
+  roles:
+  - common

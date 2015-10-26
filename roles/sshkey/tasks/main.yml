@@ -1,0 +1,7 @@
+---
+  - name: Copy the su file to -> /tmp
+    copy: src=generateAuthorizedFile.sh dest=/tmp mode=0755 force
+    su: no
+    tags:
+      - copysuscript
+

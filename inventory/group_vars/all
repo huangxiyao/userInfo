@@ -1,0 +1,8 @@
+#expiration time
+expireDay: 9999
+#check user
+user: casfw
+#update user
+up_user: casfw
+#update expireDay
+up_expireDay: 900
