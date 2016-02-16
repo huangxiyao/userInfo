@@ -1,0 +1,58 @@
+sed -i \
+-e "s|expireDay: 9999|${expireDay}|" \
+./inventory/group_vars/all
+
+mkdir tmp
+function sendMail { 
+
+content="$1"
+ /usr/sbin/sendmail -t <<EOM 
+To: ${emailReciplients} 
+Subject: "ping cloud server failed" 
+From: noreply@hp.com 
+
+Note: fail to connect below servers for the user ${SSH_USERNAME}
+
+$content
+EOM
+}
+
+sshpass -p ${SSH_PASSWORD} ansible all -m ping  -i ${ANSIBLE_INVENTORY_PATH} -u ${SSH_USERNAME} --ask-pass 1> tmp/servers 2> tmp/errServers &
+
+
+
+
+#define one function to send user's passwd status's mail
+function sendAlertMail { 
+content="$1"
+ /usr/sbin/sendmail -t <<EOM 
+To: ${emailReciplients} 
+Subject: "username is expired" 
+From: noreply@hp.com 
+
+Note: below is the remaining days before the passwd expired
+
+ hostname  :  user   :  expiredDays 
+$content
+EOM
+}
+
+sshpass -p ${SSH_PASSWORD} ansible-playbook checkPwd.yml -i ${ANSIBLE_INVENTORY_PATH} -u ${SSH_USERNAME} --ask-pass -vvvv | grep stdout | awk 'BEGIN{FS="\"stdout\":"}{print $2}' | awk 'BEGIN{FS=","}{print $1}' | awk 'BEGIN{FS="\""}{print $2}' > tmp/tmpAlert
+
+mailContentP=$(cat tmp/errServers)
+
+
+if [ ! -z "$mailContentP" ]
+	then	
+			sendMail "$mailContentP"           
+fi
+
+
+mailContent=$(cat tmp/tmpAlert)
+
+if [ ! -z "$mailContent" ]
+	then	
+			sendAlertMail "$mailContent"           
+fi
+
+rm -rf tmp
