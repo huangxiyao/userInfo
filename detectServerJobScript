@@ -44,7 +44,10 @@ mailContentP=$(cat tmp/errServers)
 
 if [ ! -z "$mailContentP" ]
 	then	
-			sendMail "$mailContentP"           
+		if [[ "$mailContentP" == *.itcs.hp.com* ]]
+                     then
+	                sendMail "$mailContentP"        
+                     fi   
 fi
 
 
